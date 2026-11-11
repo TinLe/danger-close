@@ -48,8 +48,10 @@ All computation is client-side. Your data lives in browser storage only; the app
 
 The one exception is the optional **Ask AI** feature. When you use it, it sends the model a set of ground rules, a summary of your plan and its current results (the exact text is shown on the tab), the recent conversation, any file you attach, and your question. On claude.ai it uses the platform, with no key; on the published site or a downloaded copy it calls the Anthropic API with a key **you** supply, kept in browser storage and never written into any file or backup. Two escape hatches exist:
 
-- **Offline Mode** — a persisted toggle that hard-disables Ask AI entirely, for fully air-gapped operation.
-- **Local endpoint** — route Ask AI to an OpenAI-compatible local server (Ollama, LM Studio) so the summary never leaves your machine.
+- **Offline Mode** — a persisted toggle that hard-disables Ask AI entirely, so no plan data is sent anywhere. (The Google Fonts requests above still happen.)
+- **Local endpoint** — route Ask AI to an OpenAI-compatible local server (Ollama, LM Studio) so the summary never leaves your machine. The app does not check that the URL you enter really is local, so use a `localhost` / `127.0.0.1` address.
+
+Browser storage is not encrypted and is shared by every page on the same origin, which on GitHub Pages means every `stextor.github.io` project site. For what is stored, what can leave the browser, the open security findings and hardening advice (including spend-limited API keys), see [SECURITY.md](SECURITY.md). Report vulnerabilities privately as described there, not in a public issue.
 
 ---
 
@@ -77,6 +79,7 @@ It also documents the known limitations honestly — including that no independe
 | `CHANGELOG.md` | Release history, most recent first. |
 | `TESTING.md` | What the suite covers and how to run it. |
 | `REVIEWING.md` | Short orientation for anyone auditing the math. |
+| `SECURITY.md` | Vulnerability reporting, data-storage and data-flow inventory, security review findings, hardening guidance. |
 | `LICENSE` | MIT license. |
 
 ---
