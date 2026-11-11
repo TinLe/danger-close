@@ -7709,6 +7709,7 @@ function DangerCloseMain({ onReloadData: _onReloadData, onClearAllData, onApplyD
     return true;
   };
   const [apiKeyDraft, setApiKeyDraft] = useState("");
+  const [apiKeyPersist, setApiKeyPersist] = useState(true);
   useEffect(() => {
     if (IS_CLAUDE_ARTIFACT || typeof window === "undefined" || !window.storage) return;
     window.storage.get(STORAGE_KEYS.apikey).then(r => { if (r && r.value) setLocalApiKey(r.value); }).catch(() => {});
@@ -7717,8 +7718,12 @@ function DangerCloseMain({ onReloadData: _onReloadData, onClearAllData, onApplyD
     const k = apiKeyDraft.trim();
     if (!k || IS_CLAUDE_ARTIFACT) return;
     setLocalApiKey(k); setApiKeyDraft("");
-    try { await window.storage.set(STORAGE_KEYS.apikey, k); } catch (e) { /* storage unavailable → key lives for this session only */ }
-  }, [apiKeyDraft]);
+    if (apiKeyPersist) {
+      try { await window.storage.set(STORAGE_KEYS.apikey, k); } catch (e) { /* storage unavailable → key lives for this session only */ }
+    } else {
+      try { await window.storage.delete(STORAGE_KEYS.apikey); } catch (e) { /* clean out any previously stored key */ }
+    }
+  }, [apiKeyDraft, apiKeyPersist]);
   const forgetApiKey = useCallback(async () => {
     setLocalApiKey("");
     try { await window.storage.delete(STORAGE_KEYS.apikey); } catch (e) { /* already gone */ }
@@ -8967,6 +8972,7 @@ function DangerCloseMain({ onReloadData: _onReloadData, onClearAllData, onApplyD
             </div>
             <iframe
               title="Danger Close Documentation"
+              sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
               srcDoc={DOCS_HTML.replace("</body>", DOCS_NAV_SCRIPT + "</body>")}
               style={{ width: "100%", height: "74vh", border: "none", display: "block", borderRadius: 4, background: "var(--bg)" }}
             />
@@ -14029,6 +14035,10 @@ function DangerCloseMain({ onReloadData: _onReloadData, onClearAllData, onApplyD
                         onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); saveApiKey(); } }}
                         placeholder="sk-ant-..." autoComplete="off" spellCheck={false}
                         className="dc-shrink-xs" style={{ flex: "1 1 220px", minWidth: 180, background: "color-mix(in srgb, var(--bg) 40%, transparent)", border: "1px solid var(--line)", color: "var(--ink)", fontFamily: "'JetBrains Mono',monospace", fontSize: 12, padding: "6px 8px", borderRadius: 3 }} />
+                      <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--ink-dim)", cursor: "pointer", userSelect: "none" }}>
+                        <input type="checkbox" checked={apiKeyPersist} onChange={e => setApiKeyPersist(e.target.checked)} />
+                        Remember on this device
+                      </label>
                       <button onClick={saveApiKey} disabled={!apiKeyDraft.trim()}
                         style={{ background: "transparent", border: "1px solid var(--positive)", color: apiKeyDraft.trim() ? "var(--positive)" : "var(--ink-faint)", fontFamily: "inherit", fontSize: 11, fontWeight: 600, letterSpacing: 0.5, padding: "6px 12px", borderRadius: 3, cursor: apiKeyDraft.trim() ? "pointer" : "default" }}>
                         ▶ SAVE KEY
