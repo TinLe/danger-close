@@ -120,8 +120,8 @@ These are already in the code and were confirmed during the review:
 
 | ID | Finding | Severity | Status |
 |---|---|---|---|
-| F-1 | `xlsx@0.18.5` has known prototype-pollution and ReDoS advisories and parses untrusted uploads | **Medium** | Open |
-| F-2 | Shared origin on GitHub Pages exposes stored data and the API key | **Medium** | Open (documented) |
+| F-1 | `xlsx@0.18.5` has known prototype-pollution and ReDoS advisories and parses untrusted uploads | **Medium** | Fixed (on fork `fix/sec-batch-1`: upgraded to SheetJS CDN 0.20.3) |
+| F-2 | Shared origin on GitHub Pages exposes stored data and the API key | **Medium** | Open (documented: custom domain planned) |
 | F-3 | API key and plan stored unencrypted in `localStorage` | **Medium** | Accepted risk (documented) |
 | F-4 | In-app guidance recommends `OLLAMA_ORIGINS="*"` | **Medium** | Fixed (on fork `fix/sec-batch-1`) |
 | F-5 | Local Model URL is not restricted to the local machine or to HTTPS | **Low–Medium** | Fixed (on fork `fix/sec-batch-1`: loopback only) |
