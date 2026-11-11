@@ -125,10 +125,10 @@ These are already in the code and were confirmed during the review:
 | F-3 | API key and plan stored unencrypted in `localStorage` | **Medium** | Fixed (on fork `fix/sec-batch-2`: session-only toggle added, persistent storage opt-in) |
 | F-4 | In-app guidance recommends `OLLAMA_ORIGINS="*"` | **Medium** | Fixed (on fork `fix/sec-batch-1`) |
 | F-5 | Local Model URL is not restricted to the local machine or to HTTPS | **Low–Medium** | Fixed (on fork `fix/sec-batch-1`: loopback only) |
-| F-6 | No Content-Security-Policy | **Low** | Open |
+| F-6 | No Content-Security-Policy | **Low** | Fixed (on fork `fix/sec-batch-3`: strict meta CSP added) |
 | F-7 | Docs iframe is same-origin and unsandboxed | **Low** | Fixed (on fork `fix/sec-batch-2`: sandboxed iframe) |
 | F-8 | Imported backups can carry prompt-injection text into Ask AI | **Low** | Open (documented) |
-| F-9 | Google Fonts loaded on every visit, including in Offline Mode | **Low (privacy)** | Open (documented) |
+| F-9 | Google Fonts loaded on every visit, including in Offline Mode | **Low (privacy)** | Fixed (on fork `fix/sec-batch-3`: fully embedded base64 fonts, 0 external requests) |
 | F-10 | Stale `.env` / dev-proxy claims in comments and UI text | **Informational** | Open |
 | F-11 | Residual keyless-request rewrite in `main.jsx` | **Informational** | Fixed (on fork `fix/sec-batch-1`: dev-only) |
 | F-12 | Mixed dependency pins between app and QA harness | **Informational** | Open |
