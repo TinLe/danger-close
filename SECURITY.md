@@ -120,18 +120,18 @@ These are already in the code and were confirmed during the review:
 
 | ID | Finding | Severity | Status |
 |---|---|---|---|
-| F-1 | `xlsx@0.18.5` has known prototype-pollution and ReDoS advisories and parses untrusted uploads | **Medium** | Fixed (on fork `fix/sec-batch-1`: upgraded to SheetJS CDN 0.20.3) |
-| F-2 | Shared origin on GitHub Pages exposes stored data and the API key | **Medium** | Open (documented: custom domain planned) |
-| F-3 | API key and plan stored unencrypted in `localStorage` | **Medium** | Fixed (on fork `fix/sec-batch-2`: session-only toggle added, persistent storage opt-in) |
-| F-4 | In-app guidance recommends `OLLAMA_ORIGINS="*"` | **Medium** | Fixed (on fork `fix/sec-batch-1`) |
-| F-5 | Local Model URL is not restricted to the local machine or to HTTPS | **Low–Medium** | Fixed (on fork `fix/sec-batch-1`: loopback only) |
-| F-6 | No Content-Security-Policy | **Low** | Fixed (on fork `fix/sec-batch-3`: strict meta CSP added) |
-| F-7 | Docs iframe is same-origin and unsandboxed | **Low** | Fixed (on fork `fix/sec-batch-2`: sandboxed iframe) |
-| F-8 | Imported backups can carry prompt-injection text into Ask AI | **Low** | Fixed (on fork `fix/sec-batch-4`: warning banner when backup has custom masterPrompt) |
-| F-9 | Google Fonts loaded on every visit, including in Offline Mode | **Low (privacy)** | Fixed (on fork `fix/sec-batch-3`: fully embedded base64 fonts, 0 external requests) |
-| F-10 | Stale `.env` / dev-proxy claims in comments and UI text | **Informational** | Fixed (on fork `fix/sec-batch-4`: corrected comments and UI hints) |
-| F-11 | Residual keyless-request rewrite in `main.jsx` | **Informational** | Fixed (on fork `fix/sec-batch-1`: dev-only) |
-| F-12 | Mixed dependency pins between app and QA harness | **Informational** | Fixed (on fork `fix/sec-batch-4`: aligned xlsx pin) |
+| F-1 | `xlsx@0.18.5` has known prototype-pollution and ReDoS advisories and parses untrusted uploads | **Medium** | Fixed (on fork `main`: upgraded to SheetJS CDN 0.20.3) |
+| F-2 | Shared origin on GitHub Pages exposes stored data and the API key | **Medium** | Fixed (isolated dedicated origin configured: `https://dangerclose.le.org`) |
+| F-3 | API key and plan stored unencrypted in `localStorage` | **Medium** | Fixed (on fork `main`: session-only toggle added, persistent storage opt-in) |
+| F-4 | In-app guidance recommends `OLLAMA_ORIGINS="*"` | **Medium** | Fixed (on fork `main`) |
+| F-5 | Local Model URL is not restricted to the local machine or to HTTPS | **Low–Medium** | Fixed (on fork `main`: loopback only) |
+| F-6 | No Content-Security-Policy | **Low** | Fixed (on fork `main`: strict meta CSP added) |
+| F-7 | Docs iframe is same-origin and unsandboxed | **Low** | Fixed (on fork `main`: sandboxed iframe) |
+| F-8 | Imported backups can carry prompt-injection text into Ask AI | **Low** | Fixed (on fork `main`: warning banner when backup has custom masterPrompt) |
+| F-9 | Google Fonts loaded on every visit, including in Offline Mode | **Low (privacy)** | Fixed (on fork `main`: fully embedded base64 fonts, 0 external requests) |
+| F-10 | Stale `.env` / dev-proxy claims in comments and UI text | **Informational** | Fixed (on fork `main`: corrected comments and UI hints) |
+| F-11 | Residual keyless-request rewrite in `main.jsx` | **Informational** | Fixed (on fork `main`: dev-only) |
+| F-12 | Mixed dependency pins between app and QA harness | **Informational** | Fixed (on fork `main`: aligned xlsx pin) |
 
 ### F-1 `xlsx@0.18.5` has known advisories and parses untrusted uploads
 
