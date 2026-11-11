@@ -1,0 +1,25 @@
+name: Push to GitHub
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync-to-github:
+    name: Sync to GitHub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to GitHub
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -z "${GH_PAT}" ]; then
+            echo "ERROR: GH_PAT secret is not configured in Forgejo repository settings." >&2
+            exit 1
+          fi
+          git remote add github "https://TinLe:${GH_PAT}@github.com/TinLe/danger-close.git"
+          git push --tags --prune github "+refs/heads/*:refs/heads/*"
