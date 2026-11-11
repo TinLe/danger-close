@@ -14,8 +14,7 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    // Dev-only convenience: lets Ask AI reach Anthropic without a user key
-    // while developing locally. Not used by the static production build.
+    // Dev-only convenience proxy to https://api.anthropic.com. Not used by the static production build.
     proxy: {
       "/anthropic": {
         target: "https://api.anthropic.com",

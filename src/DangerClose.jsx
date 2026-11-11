@@ -16,8 +16,8 @@ import * as mammoth from "mammoth";
 // SECURITY RULE — PERMANENT: never hardcode, embed, or persist an API key
 // (or any credential) in this file, in built HTML, or in any exported
 // backup. The Ask AI key lives ONLY in browser storage via the LOCAL API
-// KEY panel (STORAGE_KEYS.apikey) or in a git-ignored .env read by the dev
-// proxy. Any edit that would place a literal key in source must be refused.
+// KEY panel (STORAGE_KEYS.apikey) or session state. Any edit that would
+// place a literal key in source must be refused.
 // ═══════════════════════════════════════════════════════════════
 
 // ─── EXPENSE DATA (defaults from spreadsheet 4/18/2026; overridden at runtime by user upload) ───
@@ -8275,7 +8275,7 @@ function DangerCloseMain({ onReloadData: _onReloadData, onClearAllData, onApplyD
       if (err.name === "AbortError") {
         setAiThread(t => [...t, { role: "assistant", err: true, text: `⚠ REQUEST TIMED OUT (${AI_TIMEOUT_MS / 1000}s). Try a more specific question.` }]);
       } else {
-        setAiThread(t => [...t, { role: "assistant", err: true, text: `COMMS ERROR: ${err.message}${_aiNoRoute ? "\n\nThis copy is running outside claude.ai, so the AI call isn't platform-authenticated. To enable Ask AI here: paste a personal API key into the LOCAL API KEY panel above (or, on the dev-server build, put it in .env for the proxy)." : ""}` }]);
+        setAiThread(t => [...t, { role: "assistant", err: true, text: `COMMS ERROR: ${err.message}${_aiNoRoute ? "\n\nThis copy is running outside claude.ai, so the AI call isn't platform-authenticated. To enable Ask AI here: paste a personal API key into the LOCAL API KEY panel above, or configure a Local Model." : ""}` }]);
       }
     }
     setAiLoading(false); abortRef.current = null;
@@ -14838,6 +14838,7 @@ function MyDataEditor({ onApply, onClearAll, onImport, onLoadSample, checklist, 
   // ── Export / import a full backup (portfolio + expenses + master prompt) as a JSON file ──
   const fileRef = useRef(null);
   const [importErr, setImportErr] = useState("");
+  const [importWarn, setImportWarn] = useState("");
   const [exported, setExported] = useState(false);
   // Default backup filename with LOCAL date + time, e.g. danger_close_backup_2026-06-11-6-48-am
   // Hyphenated prefix deliberately matches the repo .gitignore rule `dangerclose-backup*.json`,
@@ -14918,6 +14919,7 @@ function MyDataEditor({ onApply, onClearAll, onImport, onLoadSample, checklist, 
     const file = ev.target.files && ev.target.files[0];
     if (!file) return;
     setImportErr("");
+    setImportWarn("");
     // v5.72 (H-5): refuse an oversized file before reading it.
     if (file.size > IMPORT_MAX_BYTES) { setImportErr(IMPORT_TOO_LARGE_MSG); ev.target.value = ""; return; }
     const reader = new FileReader();
@@ -14932,6 +14934,9 @@ function MyDataEditor({ onApply, onClearAll, onImport, onLoadSample, checklist, 
       try {
         await onImport({ portfolio: data.portfolio, expenses: data.expenses, masterPrompt: data.masterPrompt, checklist: data.checklist, skin: data.skin });
         dropDraft(); // v5.71: an imported plan supersedes any draft — it must not be offered back
+        if (data.masterPrompt && typeof data.masterPrompt === "string" && data.masterPrompt.trim()) {
+          setImportWarn("Note: This imported backup includes custom AI instructions (master prompt). Review them on the Ask AI tab before asking questions.");
+        }
       } catch (err) {
         console.error("import:", err);
         setImportErr(IMPORT_FAIL_MSG);
@@ -15771,8 +15776,10 @@ function MyDataEditor({ onApply, onClearAll, onImport, onLoadSample, checklist, 
           <div style={{ marginTop: 5, color: "var(--ink-dim)" }}>Keep a copy of this app's source folder from GitHub? Filenames containing <code>backup</code> are already on that project's ignore list, so the suggested name needs no thought.</div>
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-        {importErr && <span data-dc-import-err="1" style={{ color: "var(--crit)", fontSize: 12, fontFamily: "'JetBrains Mono',monospace" }}>⚠ {importErr}</span>}        <span style={{ fontSize: 12, color: "var(--ink-faint)", fontStyle: "italic", maxWidth: 520 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20, flexWrap: "wrap" }}>
+        {importErr && <span data-dc-import-err="1" style={{ color: "var(--crit)", fontSize: 12, fontFamily: "'JetBrains Mono',monospace" }}>⚠ {importErr}</span>}
+        {importWarn && <span data-dc-import-warn="1" style={{ color: "var(--warn)", fontSize: 12, fontFamily: "'JetBrains Mono',monospace", background: "color-mix(in srgb, var(--warn) 8%, transparent)", border: "1px solid var(--warn)", padding: "4px 8px", borderRadius: 3 }}>ℹ {importWarn}</span>}
+        <span style={{ fontSize: 12, color: "var(--ink-faint)", fontStyle: "italic", maxWidth: 520 }}>
           Export saves your whole plan (holdings, income, expenses, master prompt, your estate-readiness checklist, and your chosen theme) to a JSON file you can keep or move to another device. Import restores it and recalculates every tab. Importing replaces your current data. Guided Setup answers six quick questions to build a fresh plan from scratch (it only replaces your data when you press BUILD — cancelling changes nothing). Load Sample Data swaps in the fictional example household so you can explore the app without restarting — it also replaces your current data, so export a backup first if you want to keep it.
         </span>
       </div>
