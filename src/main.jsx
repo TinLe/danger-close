@@ -46,21 +46,21 @@ if (!window.storage) {
 // In artifact/dev mode (no user-supplied key), route api.anthropic.com calls
 // through a same-origin /anthropic proxy (configured in vite.config.js for dev).
 // When the visitor supplies their own key (BYOK), an x-api-key header is present
-// and the call passes straight through to Anthropic. On a static GitHub Pages
-// host there is no proxy, so Ask AI requires a user key — which is the intended
-// bring-your-own-key behavior.
+// and the call passes straight through to Anthropic. On a static host there is
+// no proxy, so the proxy rewrite is restricted exclusively to dev builds.
 const _fetch = window.fetch.bind(window);
 window.fetch = (input, init) => {
   const url = typeof input === "string" ? input : input && input.url;
   if (
+    import.meta.env.DEV &&
     url &&
     url.startsWith("https://api.anthropic.com") &&
     location.protocol.startsWith("http")
   ) {
     const headers = (init && init.headers) || {};
-    const hasKey = Object.keys(headers).some(
-      (h) => h.toLowerCase() === "x-api-key"
-    );
+    const hasKey = headers instanceof Headers
+      ? headers.has("x-api-key")
+      : Object.keys(headers).some((h) => h.toLowerCase() === "x-api-key");
     if (!hasKey) {
       return _fetch(url.replace("https://api.anthropic.com", "/anthropic"), init);
     }
