@@ -3880,6 +3880,22 @@ const IS_CLAUDE_ARTIFACT = (() => {
   } catch (e) { return true; }
 })();
 
+// Validates that a Local Model endpoint is strictly on the local machine (loopback).
+// F-5: remote endpoints are rejected to prevent transmitting plan summaries off-machine.
+// For remote LLM servers, use an SSH tunnel (e.g. ssh -N -L 11434:localhost:11434 user@remote).
+function isLoopbackUrl(urlStr) {
+  try {
+    const u = new URL(urlStr);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+    const h = u.hostname.toLowerCase();
+    if (h === "localhost" || h.endsWith(".localhost") || h === "::1" || h === "[::1]") return true;
+    if (/^127(?:\.(?:25[0-5]|2[0-4]\d|[01]?\d\d?)){3}$/.test(h)) return true;
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 // ─── ESTATE / RETIREMENT-READINESS CHECKLIST ───
 // Static metadata for each checklist item. State (done/notes/contact) is stored
 // separately (per id) at the shell level + window.storage so it survives Save & Apply
@@ -7668,7 +7684,12 @@ function DangerCloseMain({ onReloadData: _onReloadData, onClearAllData, onApplyD
     window.storage.get(STORAGE_KEYS.offline).then(r => { if (r && r.value === "1") setOfflineMode(true); }).catch(() => {});
     if (!IS_CLAUDE_ARTIFACT) {
       window.storage.get(STORAGE_KEYS.localLLM).then(r => {
-        if (r && r.value) { try { const v = JSON.parse(r.value); if (v && v.url) setLocalLLM(v); } catch (e) {} }
+        if (r && r.value) {
+          try {
+            const v = JSON.parse(r.value);
+            if (v && v.url && isLoopbackUrl(v.url)) setLocalLLM(v);
+          } catch (e) {}
+        }
       }).catch(() => {});
     }
   }, []);
@@ -7677,11 +7698,15 @@ function DangerCloseMain({ onReloadData: _onReloadData, onClearAllData, onApplyD
     try { window.storage && window.storage.set(STORAGE_KEYS.offline, on ? "1" : "0").catch(() => {}); } catch (e) {}
   };
   const saveLocalLLM = (v) => {
+    if (v && v.url) {
+      if (!isLoopbackUrl(v.url)) return false;
+    }
     setLocalLLM(v);
     try {
       if (v && v.url) window.storage && window.storage.set(STORAGE_KEYS.localLLM, JSON.stringify(v)).catch(() => {});
       else window.storage && window.storage.delete(STORAGE_KEYS.localLLM).catch(() => {});
     } catch (e) {}
+    return true;
   };
   const [apiKeyDraft, setApiKeyDraft] = useState("");
   useEffect(() => {
@@ -8216,7 +8241,7 @@ function DangerCloseMain({ onReloadData: _onReloadData, onClearAllData, onApplyD
       clearTimeout(timeoutId);
       if (!resp.ok) {
         const errText = await resp.text().catch(() => "");
-        setAiThread(t => [...t, { role: "assistant", err: true, text: `ERROR [${resp.status}]: ${resp.statusText}${errText ? " — " + errText.slice(0, 200) : ""}${_useLocal ? "\n\n(Local model endpoint: " + localLLM.url + " — is the server running, and is CORS enabled? Ollama: set OLLAMA_ORIGINS=\"*\". LM Studio: enable CORS in the server settings.)" : ""}` }]);
+        setAiThread(t => [...t, { role: "assistant", err: true, text: `ERROR [${resp.status}]: ${resp.statusText}${errText ? " — " + errText.slice(0, 200) : ""}${_useLocal ? "\n\n(Local model endpoint: " + localLLM.url + " — is the server running, and is CORS enabled? Ollama: set OLLAMA_ORIGINS to this page's origin. LM Studio: enable CORS in the server settings.)" : ""}` }]);
         setAiLoading(false); abortRef.current = null;
         return;
       }
@@ -14028,7 +14053,10 @@ function DangerCloseMain({ onReloadData: _onReloadData, onClearAllData, onApplyD
                 </summary>
                 <div style={{ padding: "0 10px 10px" }}>
                   <div style={{ fontSize: 12, color: "var(--ink-faint)", lineHeight: 1.6, marginBottom: 8 }}>
-                    Point Ask AI at an <span style={{ color: "var(--ink)" }}>OpenAI-compatible endpoint on your computer</span> — your plan summary and questions then go to your own machine and <span style={{ color: "var(--ink)" }}>never touch Anthropic</span>. Works with <span style={{ color: "var(--ink)" }}>Ollama</span> (URL <code style={{ color: "var(--violet)" }}>http://localhost:11434/v1</code> — start it with <code style={{ color: "var(--violet)" }}>OLLAMA_ORIGINS="*" ollama serve</code> so the browser may call it) and <span style={{ color: "var(--ink)" }}>LM Studio</span> (URL <code style={{ color: "var(--violet)" }}>http://localhost:1234/v1</code> — enable CORS in its server settings). Honest trade-offs: local models are <span style={{ color: "var(--ink)" }}>text-only here</span> (image/PDF attachments are skipped), typically slower, and materially weaker at tax/retirement reasoning than the hosted model — verify everything, twice.
+                    Point Ask AI at an <span style={{ color: "var(--ink)" }}>OpenAI-compatible endpoint on your computer</span> — your plan summary and questions then go to your own machine and <span style={{ color: "var(--ink)" }}>never touch Anthropic</span>.
+                    For security, only loopback addresses (<code style={{ color: "var(--violet)" }}>localhost</code> or <code style={{ color: "var(--violet)" }}>127.0.0.1</code>) are accepted.
+                    To use a model on a remote or home-server machine, forward it via an SSH tunnel: <code style={{ color: "var(--violet)" }}>ssh -N -L 11434:localhost:11434 user@server</code>.
+                    Works with <span style={{ color: "var(--ink)" }}>Ollama</span> (URL <code style={{ color: "var(--violet)" }}>http://localhost:11434/v1</code> — start it with <code style={{ color: "var(--violet)" }}>OLLAMA_ORIGINS="{typeof location !== "undefined" && location.origin ? location.origin : "http://localhost:5173"}" ollama serve</code> so the browser may call it; avoid wildcard origins like "*") and <span style={{ color: "var(--ink)" }}>LM Studio</span> (URL <code style={{ color: "var(--violet)" }}>http://localhost:1234/v1</code> — enable CORS in its server settings). Honest trade-offs: local models are <span style={{ color: "var(--ink)" }}>text-only here</span> (image/PDF attachments are skipped), typically slower, and materially weaker at tax/retirement reasoning than the hosted model — verify everything, twice.
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                     <input id="dc-llm-url" defaultValue={localLLM ? localLLM.url : ""} placeholder="http://localhost:11434/v1"
@@ -14038,7 +14066,10 @@ function DangerCloseMain({ onReloadData: _onReloadData, onClearAllData, onApplyD
                     <button onClick={() => {
                       const url = (document.getElementById("dc-llm-url").value || "").trim();
                       const model = (document.getElementById("dc-llm-model").value || "").trim();
-                      if (url) saveLocalLLM({ url, model });
+                      if (url) {
+                        const ok = saveLocalLLM({ url, model });
+                        if (!ok) alert("Only loopback URLs (http://localhost:... or http://127.0.0.1:...) are allowed. For remote servers, please forward via an SSH tunnel.");
+                      }
                     }} style={{ background: "transparent", border: "1px solid var(--violet)", color: "var(--violet)", fontFamily: "inherit", fontSize: 11, fontWeight: 600, padding: "7px 12px", borderRadius: 3, cursor: "pointer", letterSpacing: 1 }}>
                       ▶ USE LOCAL MODEL
                     </button>

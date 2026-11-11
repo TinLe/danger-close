@@ -205,7 +205,7 @@ if (window.storage) {
     ck("window.storage.get throws on a missing key (artifact API contract)", threw);
   } catch (e) { ck("window.storage exercised without throwing", false, String(e).slice(0, 160)); }
 }
-ck("Anthropic fetch wrapper installed by the bootstrap", /\/anthropic/.test(html));
+ck("Anthropic fetch wrapper installed by the bootstrap", /api\.anthropic\.com/.test(html));
 
 console.log(`\nBUILT SMOKE: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
